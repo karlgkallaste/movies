@@ -8,7 +8,8 @@
 
     <ItemGroup>
       <PackageReference Include="Marten" Version="7.37.1" />
-      <PackageReference Include="WolverineFx" Version="3.8.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
     </ItemGroup>
 
 </Project>

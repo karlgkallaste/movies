@@ -1,6 +1,9 @@
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
-builder.AddProject<Movie_Api>("Api");
 
+var postgresDb = builder.AddPostgres("default");
+
+builder.AddProject<Movie_Api>("Api")
+    .WithReference(postgresDb);
 builder.Build().Run();
