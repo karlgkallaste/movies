@@ -1,6 +1,7 @@
 using Marten;
 using Marten.Events.Projections;
 using Movie.Domain.Features.Movies.Commands;
+using Movie.Domain.Features.Movies.Projections;
 using Weasel.Core;
 using Wolverine;
 using Wolverine.Marten;
@@ -20,16 +21,10 @@ builder.Services.AddMarten(options =>
     options.Connection(builder.Configuration.GetConnectionString("Default")!);
     // Specify that we want to use STJ as our serializer
     options.UseNewtonsoftForSerialization();
-    options.Projections.Snapshot<Movie.Domain.Features.Movies.Movie>(SnapshotLifecycle.Inline);
-    // If we're running in development mode, let Marten just take care
-    // of all necessary schema building and patching behind the scenes
-    if (builder.Environment.IsDevelopment())
-    {
-        options.AutoCreateSchemaObjects = AutoCreate.All;
-    }
+    options.Projections.Add<MovieDetailsProjection>(ProjectionLifecycle.Inline);
 }).UseLightweightSessions();
 
-builder.Services.AddWolverine(o => 
+builder.Services.AddWolverine(o =>
 {
     o.Discovery.IncludeAssembly(typeof(CreateMovieCommand).Assembly);
 });
