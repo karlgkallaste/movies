@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movie.Host", "Movie.Host\Movie.Host.csproj", "{D0A14116-2964-4F4C-A1F1-6E4D05E16EFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movie.Api", "Movie.Api\Movie.Api.csproj", "{95F4B366-CEDA-4A53-88D1-833BBF5DA6EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movie.Domain", "Movie.Domain\Movie.Domain.csproj", "{87EB28B9-4F6E-4D67-8062-964DC2C29976}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D0A14116-2964-4F4C-A1F1-6E4D05E16EFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0A14116-2964-4F4C-A1F1-6E4D05E16EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0A14116-2964-4F4C-A1F1-6E4D05E16EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0A14116-2964-4F4C-A1F1-6E4D05E16EFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95F4B366-CEDA-4A53-88D1-833BBF5DA6EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95F4B366-CEDA-4A53-88D1-833BBF5DA6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95F4B366-CEDA-4A53-88D1-833BBF5DA6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95F4B366-CEDA-4A53-88D1-833BBF5DA6EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87EB28B9-4F6E-4D67-8062-964DC2C29976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87EB28B9-4F6E-4D67-8062-964DC2C29976}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87EB28B9-4F6E-4D67-8062-964DC2C29976}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87EB28B9-4F6E-4D67-8062-964DC2C29976}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
