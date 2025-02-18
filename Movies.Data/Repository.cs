@@ -4,20 +4,27 @@ namespace Movies.Data;
 
 public interface IRepository<T> where T : class
 {
-    Task<T?> GetByIdAsync(Guid id);
+    Task<T?> GetById(Guid id);
+    Task<IReadOnlyList<T>> All();
 }
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    private readonly IDocumentSession _session;
+    private readonly IDocumentSession _documentSession;
 
-    public Repository(IDocumentSession session)
+    public Repository(IDocumentSession documentSession)
     {
-        _session = session;
+        _documentSession = documentSession;
     }
 
-    public async Task<T?> GetByIdAsync(Guid id)
+    public async Task<T?> GetById(Guid id)
     {
-        return await _session.LoadAsync<T>(id) ?? null;
+        return await _documentSession.LoadAsync<T>(id) ?? null;
+    }
+
+    public async Task<IReadOnlyList<T>> All()
+    {
+        var query = _documentSession.Query<T>();
+        return await query.ToListAsync();
     }
 }

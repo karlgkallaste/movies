@@ -12,7 +12,7 @@ public class Movie
     public MovieStatus Status { get; private set; }
     public double Budget { get; private set; }
     public string HomePage { get; private set; }
-    public int Rating { get; private set; }
+    public int RatedCount { get; private set; }
     public Genre Genre { get; private set; }
 
     public void Apply(MovieCreated @event)
@@ -20,7 +20,11 @@ public class Movie
         Id = @event.Id;
         Title = @event.Title;
         Overview = @event.Overview;
+    }
 
+    public void Apply(MovieRated @event)
+    {
+        RatedCount = RatedCount++;
     }
 }
 

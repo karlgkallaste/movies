@@ -6,39 +6,49 @@ using Movies.Domain.Features.Movies.Commands;
 using Movies.Domain.Features.Movies.Projections;
 using Movies.Api.Features.Movies.Models;
 using Movies.Api.Features.Movies.Requests;
+using Movies.Data;
+using Movies.Domain.Features.Movies;
 using Wolverine;
 
 namespace Movies.Api.Features.Movies.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class MovieController : ControllerBase
+public class MovieController(
+    IMessageBus messageBus,
+    IDocumentSession documentSession,
+    IRepository<Movie> movieRepository)
+    : ControllerBase
 {
-    [HttpGet("")]
-    [ProducesResponseType(typeof(void), 200)]
-    [ProducesResponseType(typeof(void), 400)]
-    public async Task<IActionResult> Get([FromServices] IDocumentSession documentSession)
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(List<MovieDetails>), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> Get([FromServices] IRepository<MovieDetails> movieDetailsRepository, [FromRoute]Guid id)
     {
-        var query = documentSession.Query<MovieDetails>();
-        return Ok();
+        var movie = await movieRepository.GetById(id);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        
+        var details = await movieDetailsRepository.GetById(movie.Id);
+        return Ok(details);
     }
 
     [HttpGet("list")]
     [ProducesResponseType(typeof(MovieListModel), 200)]
-    [ProducesResponseType(typeof(void), 400)]
-    public async Task<IActionResult> List([FromServices] IDocumentSession documentSession, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> List([FromServices] IRepository<MovieListItem> movieListRepository, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
 
-        var query = documentSession.Query<MovieDetails>();
+        var query = await movieListRepository.All();
 
-        int totalCount = await query.CountAsync();
+        int totalCount = query.Count;
 
-        var movies = await query
+        var movies = query
             .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+            .Take(pageSize);
 
         var result = new MovieListModel
         {
@@ -58,7 +68,7 @@ public class MovieController : ControllerBase
     [HttpPost("create")]
     [ProducesResponseType(typeof(void), 200)]
     [ProducesResponseType(typeof(Result), 400)]
-    public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator, [FromServices] IMessageBus messageBus, [FromBody] CreateMovieRequest request)
+    public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator, [FromBody] CreateMovieRequest request)
     {
         var validationResult = (await validator.ValidateAsync(request)).ToResult();
 
@@ -71,7 +81,36 @@ public class MovieController : ControllerBase
 
         if (!commandResult.IsSuccess)
         {
-            return BadRequest(Result.Failure("cmd","Failure"));
+            return BadRequest(Result.Failure(nameof(Movie),"Failed to create the movie."));
+        }
+        return Ok();
+    }
+
+    [HttpPost("rate")]
+    [ProducesResponseType(typeof(void), 200)]
+    [ProducesResponseType(typeof(Result), 400)]
+    [ProducesResponseType(typeof(NotFoundResult), 404)]
+    public async Task<IActionResult> Rate([FromServices] IValidator<RateMovieRequest> validator, [FromBody] RateMovieRequest request)
+    {
+        var validationResult = (await validator.ValidateAsync(request)).ToResult();
+
+        if (!validationResult.IsSuccess)
+        {
+            return BadRequest(validationResult); 
+        }
+
+        var movie = await movieRepository.GetById(request.Id);
+
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        
+        var commandResult = await messageBus.InvokeAsync<Result>(new RateMovieCommand(request.Id, request.Rating));
+
+        if (!commandResult.IsSuccess)
+        {
+            return BadRequest(Result.Failure(nameof(Movie),"Failed to rate the movie."));
         }
         return Ok();
     }
