@@ -2,6 +2,7 @@ using Marten;
 using Marten.Events.Projections;
 using Movies.Api.TestData;
 using Movies.Data;
+using Movies.Domain.Features.Movies;
 using Movies.Domain.Features.Movies.Commands;
 using Movies.Domain.Features.Movies.Projections;
 using Weasel.Core;
@@ -18,6 +19,7 @@ builder.Services.AddMarten(options =>
     options.Connection(builder.Configuration.GetConnectionString("Default")!);
     options.UseNewtonsoftForSerialization();
     options.AutoCreateSchemaObjects = AutoCreate.All;
+    options.Projections.Snapshot<Movie>(SnapshotLifecycle.Inline);
     options.Projections.Add<MovieDetailsProjection>(ProjectionLifecycle.Inline);
 }).UseLightweightSessions();
 
