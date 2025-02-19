@@ -20,11 +20,12 @@ public class Movie
         Id = @event.Id;
         Title = @event.Title;
         Overview = @event.Overview;
+        Status = @event.Status;
     }
 
     public void Apply(MovieRated @event)
     {
-        RatedCount = RatedCount++;
+        RatedCount += 1;
     }
 }
 
