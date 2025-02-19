@@ -22,7 +22,6 @@ namespace Movies.Api.Tests.Features.Movies.Controllers;
 public class MovieControllerTests
 {
     private Mock<IMessageBus> _messageBusMock;
-    private Mock<IDocumentSession> _documentSessionMock;
     private Mock<IRepository<Movie>> _movieRepositoryMock;
     private MovieController _sut;
 
@@ -30,9 +29,8 @@ public class MovieControllerTests
     public void Setup()
     {
         _messageBusMock = new Mock<IMessageBus>();
-        _documentSessionMock = new Mock<IDocumentSession>();
         _movieRepositoryMock = new Mock<IRepository<Movie>>();
-        _sut = new MovieController(_messageBusMock.Object, _documentSessionMock.Object, _movieRepositoryMock.Object);
+        _sut = new MovieController(_messageBusMock.Object, _movieRepositoryMock.Object);
     }
 
     [Test]

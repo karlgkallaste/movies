@@ -8,7 +8,8 @@ public class MovieDetails
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
-    public int AverageRating { get; set; }
+    public string Overview { get; set; }
+    public double AverageRating { get; set; }
     public int RatingCount { get; set; }
 }
 
@@ -18,11 +19,13 @@ public class MovieDetailsProjection : SingleStreamProjection<MovieDetails>
     {
         details.Id = @event.Id;
         details.Title = @event.Title;
+        details.Overview = @event.Overview;
     }
 
     public void Apply(MovieRated @event, MovieDetails details)
     {
-        details.AverageRating = (details.AverageRating * details.RatingCount + @event.Rating) / (details.RatingCount + 1);
         details.RatingCount++;
+        details.AverageRating = Math.Round((details.AverageRating * (details.RatingCount - 1) + @event.Rating) / details.RatingCount, 2);
+
     }
 }

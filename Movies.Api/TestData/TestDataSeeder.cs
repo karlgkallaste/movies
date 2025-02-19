@@ -17,5 +17,6 @@ public static class TestDataSeeder
         }
 
         await TestMovieSeed.Seed(documentSession);
+        await TestMovieRatingSeed.Seed(documentSession);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Marten;
 using Microsoft.AspNetCore.Mvc;
 using Movies.Api.Infrastructure;
 using Movies.Domain.Features.Movies.Commands;
@@ -13,10 +12,9 @@ using Wolverine;
 namespace Movies.Api.Features.Movies.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class MovieController(
     IMessageBus messageBus,
-    IDocumentSession documentSession,
     IRepository<Movie> movieRepository)
     : ControllerBase
 {
@@ -66,7 +64,7 @@ public class MovieController(
     }
 
     [HttpPost("create")]
-    [ProducesResponseType(typeof(void), 200)]
+    [ProducesResponseType(typeof(OkResult), 200)]
     [ProducesResponseType(typeof(Result), 400)]
     public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator, [FromBody] CreateMovieRequest request)
     {
@@ -77,7 +75,7 @@ public class MovieController(
             return BadRequest(validationResult); 
         }
         
-        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview));
+        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview, request.ReleaseDate, request.Status, request.Genre));
 
         if (!commandResult.IsSuccess)
         {
