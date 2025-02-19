@@ -12,7 +12,7 @@ namespace Movies.Domain.Tests.Features.Movies
         public void Apply_MovieCreated_ShouldSetProperties()
         {
             var movie = Builder<Movie>.CreateNew().Build();
-            var @event = new MovieCreated(movie.Id, "Test Title", "Test Overview", MovieStatus.Released);
+            var @event = new MovieCreated(movie.Id, "Test Title", "Test Overview", DateTimeOffset.Now, MovieStatus.Released, MovieGenre.Action);
 
             // Act
             movie.Apply(@event);
@@ -20,7 +20,9 @@ namespace Movies.Domain.Tests.Features.Movies
             // Assert
             movie.Title.Should().BeEquivalentTo(@event.Title);
             movie.Overview.Should().BeEquivalentTo(@event.Overview);
+            movie.ReleaseDate.Should().Be(@event.ReleaseDate);
             movie.Status.Should().Be(@event.Status);
+            movie.MovieGenre.Should().Be(@event.MovieGenre);
         }
 
         [Test]

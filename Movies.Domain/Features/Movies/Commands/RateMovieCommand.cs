@@ -1,4 +1,5 @@
 using Marten;
+using Microsoft.Extensions.Logging;
 using Movies.Data;
 using Movies.Domain.Features.Movies.Events;
 
@@ -9,17 +10,19 @@ public record RateMovieCommand(Guid Id, int Rating);
 public static class RateMovieCommandHandler
 {
     public static async Task<Result> Handle(RateMovieCommand command, IDocumentSession session,
-        IRepository<Movie> movieRepository)
+        IRepository<Movie> movieRepository, ILogger<RateMovieCommand> logger)
     {
-        var movie = await movieRepository.GetById(command.Id);
+        var movie = await movieRepository.GetById(command.Id); // Need the latest information.
 
         if (movie == null)
         {
+            logger.LogWarning("Tried to rate not found movie. ID: {Id}", command.Id);
             return Result.Failure(nameof(Movie), "Movie not found.");
         }
 
         if (movie.Status != MovieStatus.Released)
         {
+            logger.LogWarning("Tried to rate a unreleased movie. ID: {Id}", command.Id);
             return Result.Failure(nameof(Movie), "Only released movies can be rated.");
         }
 

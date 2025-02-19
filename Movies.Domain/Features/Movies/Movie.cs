@@ -8,19 +8,21 @@ public class Movie
     public string Title { get; private set; }
     public string Overview { get; private set; }
     public int Popularity { get; private set; }
-    public DateTimeOffset ReleaseDate { get; private set; }
+    public DateTimeOffset? ReleaseDate { get; private set; }
     public MovieStatus Status { get; private set; }
     public double Budget { get; private set; }
     public string HomePage { get; private set; }
     public int RatedCount { get; private set; }
-    public Genre Genre { get; private set; }
+    public MovieGenre MovieGenre { get; private set; }
 
     public void Apply(MovieCreated @event)
     {
         Id = @event.Id;
         Title = @event.Title;
         Overview = @event.Overview;
+        ReleaseDate = @event.ReleaseDate ?? null;
         Status = @event.Status;
+        MovieGenre = @event.MovieGenre;
     }
 
     public void Apply(MovieRated @event)
@@ -35,8 +37,11 @@ public enum MovieStatus
     InProduction = 1
 }
 
-public enum Genre
+public enum MovieGenre
 {
     Action = 0,
-    Drama = 1
+    Drama = 1,
+    Crime = 2,
+    SciFi = 3,
+    Animation = 4,
 }

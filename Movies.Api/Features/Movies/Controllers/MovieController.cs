@@ -75,7 +75,7 @@ public class MovieController(
             return BadRequest(validationResult); 
         }
         
-        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview, request.Status));
+        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview, request.ReleaseDate, request.Status, request.Genre));
 
         if (!commandResult.IsSuccess)
         {

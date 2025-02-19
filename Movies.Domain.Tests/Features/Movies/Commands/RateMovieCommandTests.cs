@@ -2,6 +2,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using Marten;
 using Marten.Events;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Movies.Data;
 using Movies.Domain.Features.Movies;
@@ -16,6 +17,7 @@ public class RateMovieCommandTests
     private Mock<IRepository<Movie>> _movieRepositoryMock;
     private Mock<IDocumentSession> _documentSessionMock;
     private Mock<IEventStore> _eventStoreMock;
+    private Mock<ILogger<RateMovieCommand>> _loggerMock;
     
 
     [SetUp]
@@ -24,7 +26,7 @@ public class RateMovieCommandTests
         _movieRepositoryMock = new Mock<IRepository<Movie>>();
         _documentSessionMock = new Mock<IDocumentSession>();
         _eventStoreMock = new Mock<IEventStore>();
-
+        _loggerMock = new Mock<ILogger<RateMovieCommand>>();
         _documentSessionMock.Setup(s => s.Events).Returns(_eventStoreMock.Object);
     }
 
@@ -36,7 +38,7 @@ public class RateMovieCommandTests
 
         // Act
         var result =
-            await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object);
+            await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object, _loggerMock.Object);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -54,7 +56,7 @@ public class RateMovieCommandTests
 
         // Act
         var result =
-            await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object);
+            await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object, _loggerMock.Object);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -71,7 +73,7 @@ public class RateMovieCommandTests
         _movieRepositoryMock.Setup(repo => repo.GetById(command.Id)).ReturnsAsync(movie);
 
         // Act
-        var result = await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object);
+        var result = await RateMovieCommandHandler.Handle(command, _documentSessionMock.Object, _movieRepositoryMock.Object, _loggerMock.Object);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
