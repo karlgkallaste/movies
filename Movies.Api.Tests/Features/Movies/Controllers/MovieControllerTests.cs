@@ -22,21 +22,21 @@ namespace Movies.Api.Tests.Features.Movies.Controllers;
 public class MovieControllerTests
 {
     private Mock<IMessageBus> _messageBusMock;
-    private Mock<IRepository<Movie>> _movieRepositoryMock;
+    private Mock<IEntityRepository<Movie>> _movieRepositoryMock;
     private MovieController _sut;
 
     [SetUp]
     public void Setup()
     {
         _messageBusMock = new Mock<IMessageBus>();
-        _movieRepositoryMock = new Mock<IRepository<Movie>>();
+        _movieRepositoryMock = new Mock<IEntityRepository<Movie>>();
         _sut = new MovieController(_messageBusMock.Object, _movieRepositoryMock.Object);
     }
 
     [Test]
     public async Task Get_returns_notFound_if_movie_is_not_found()
     {
-        var movieDetailsRepositoryMock = new Mock<IRepository<MovieDetails>>();
+        var movieDetailsRepositoryMock = new Mock<IProjectionRepository<MovieDetails>>();
         // Act
         var result = await _sut.Get(movieDetailsRepositoryMock.Object, Guid.NewGuid());
 
@@ -52,7 +52,7 @@ public class MovieControllerTests
         _movieRepositoryMock.Setup(x => x.GetById(movie.Id))
             .ReturnsAsync(movie);
 
-        var movieDetailsRepositoryMock = new Mock<IRepository<MovieDetails>>();
+        var movieDetailsRepositoryMock = new Mock<IProjectionRepository<MovieDetails>>();
 
         var movieDetails = Builder<MovieDetails>.CreateNew().Build();
         movieDetailsRepositoryMock.Setup(x => x.GetById(movie.Id))
@@ -62,7 +62,7 @@ public class MovieControllerTests
         var result = (await _sut.Get(movieDetailsRepositoryMock.Object, movie.Id) as OkObjectResult);
 
         // Assert
-        result.Value.Should().BeEquivalentTo(movieDetails);
+        result.Value.Should().BeEquivalentTo(new MovieDetailsModel(movieDetails));
     }
 
     [Test]
@@ -75,8 +75,8 @@ public class MovieControllerTests
             Builder<MovieListItem>.CreateNew().Build(),
         };
 
-        var movieListRepositoryMock = new Mock<IRepository<MovieListItem>>();
-        movieListRepositoryMock.Setup(x => x.All())
+        var movieListRepositoryMock = new Mock<IProjectionRepository<MovieListItem>>();
+        movieListRepositoryMock.Setup(x => x.GetPagedResults(1, 10))
             .ReturnsAsync(listItems);
 
         // Act
@@ -169,6 +169,95 @@ public class MovieControllerTests
         // Assert
         result.Should().BeOfType<OkResult>();
         _messageBusMock.Verify(x => x.InvokeAsync<Result>(It.IsAny<CreateMovieCommand>(), default, null), Times.Once);
+    }
+    
+      [Test]
+    public async Task UpsertAdditionalInfo_returns_badRequest_if_validation_fails()
+    {
+        var requestValidator = new Mock<IValidator<EditMovieRequest>>();
+
+        var request = Builder<EditMovieRequest>.CreateNew().Build();
+
+        requestValidator.Setup(x => x.ValidateAsync(request, default))
+            .ReturnsAsync(new ValidationResult
+            {
+                Errors =
+                [
+                    new ValidationFailure("Key", "Error"),
+                ]
+            });
+
+        // Act
+        var result = await _sut.Edit(requestValidator.Object, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _messageBusMock.Verify(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null), Times.Never);
+    }
+
+    [Test]
+    public async Task UpsertAdditionalInfo_returns_notFound_if_movie_is_not_found()
+    {
+        var requestValidator = new Mock<IValidator<EditMovieRequest>>();
+
+        var request = Builder<EditMovieRequest>.CreateNew().Build();
+        requestValidator.Setup(x => x.ValidateAsync(request, default)).ReturnsAsync(new ValidationResult());
+
+        _movieRepositoryMock.Setup(x => x.GetById(request.Id))
+            .ReturnsAsync(null! as Movie);
+
+        // Act
+        var result = await _sut.Edit(requestValidator.Object, request);
+
+        // Assert
+        result.Should().BeOfType<NotFoundResult>();
+        _messageBusMock.Verify(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null), Times.Never);
+    }
+
+    [Test]
+    public async Task UpsertAdditionalInfo_returns_badRequest_if_command_fails()
+    {
+        var requestValidator = new Mock<IValidator<EditMovieRequest>>();
+
+        var request = Builder<EditMovieRequest>.CreateNew().Build();
+        requestValidator.Setup(x => x.ValidateAsync(request, default)).ReturnsAsync(new ValidationResult());
+
+        var movie = Builder<Movie>.CreateNew().Build();
+        _movieRepositoryMock.Setup(x => x.GetById(request.Id))
+            .ReturnsAsync(movie);
+
+        _messageBusMock.Setup(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null))
+            .ReturnsAsync(Result.Failure("Key", "Error"));
+
+        // Act
+        var result = await _sut.Edit(requestValidator.Object, request);
+
+        // Assert 
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _messageBusMock.Verify(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null), Times.Once);
+    }
+
+    [Test]
+    public async Task UpsertAdditionalInfo_returns_ok_if_command_succeeds()
+    {
+        var requestValidator = new Mock<IValidator<EditMovieRequest>>();
+
+        var request = Builder<EditMovieRequest>.CreateNew().Build();
+        requestValidator.Setup(x => x.ValidateAsync(request, default)).ReturnsAsync(new ValidationResult());
+
+        var movie = Builder<Movie>.CreateNew().Build();
+        _movieRepositoryMock.Setup(x => x.GetById(request.Id))
+            .ReturnsAsync(movie);
+
+        _messageBusMock.Setup(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _sut.Edit(requestValidator.Object, request);
+
+        // Assert 
+        result.Should().BeOfType<OkResult>();
+        _messageBusMock.Verify(x => x.InvokeAsync<Result>(It.IsAny<EditMovieCommand>(), default, null), Times.Once);
     }
 
     [Test]

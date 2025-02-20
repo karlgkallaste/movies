@@ -11,7 +11,7 @@ public static class TestDataSeeder
         using var scope = appServices.CreateScope();
         var documentSession = scope.ServiceProvider.GetRequiredService<IDocumentSession>();
 
-        if (documentSession.Query<Movie>().ToList().Count > 0)
+        if (await documentSession.Query<Movie>().AnyAsync())
         {
             return;
         }

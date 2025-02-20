@@ -17,13 +17,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddMarten(options =>
 {
     options.Connection(builder.Configuration.GetConnectionString("Default")!);
-    options.UseNewtonsoftForSerialization();
+    options.UseNewtonsoftForSerialization(nonPublicMembersStorage: NonPublicMembersStorage.All);
     options.AutoCreateSchemaObjects = AutoCreate.All;
     options.Projections.Snapshot<Movie>(SnapshotLifecycle.Inline);
     options.Projections.Add<MovieDetailsProjection>(ProjectionLifecycle.Inline);
+    options.Projections.Add<MovieListProjection>(ProjectionLifecycle.Inline);
 }).UseLightweightSessions();
 
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
+builder.Services.AddScoped(typeof(IProjectionRepository<>), typeof(ProjectionRepository<>));
 builder.Host.UseWolverine(o =>
 {
     o.UseFluentValidation();

@@ -10,9 +10,9 @@ public record RateMovieCommand(Guid Id, int Rating);
 public static class RateMovieCommandHandler
 {
     public static async Task<Result> Handle(RateMovieCommand command, IDocumentSession session,
-        IRepository<Movie> movieRepository, ILogger<RateMovieCommand> logger)
+        IEntityRepository<Movie> movieEntityRepository, ILogger<RateMovieCommand> logger)
     {
-        var movie = await movieRepository.GetById(command.Id); // Need the latest information.
+        var movie = await movieEntityRepository.GetById(command.Id); // Need the latest information.
 
         if (movie == null)
         {
