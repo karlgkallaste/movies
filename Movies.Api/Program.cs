@@ -1,5 +1,6 @@
 using Marten;
 using Marten.Events.Projections;
+using Microsoft.OpenApi.Models;
 using Movies.Api.TestData;
 using Movies.Data;
 using Movies.Domain.Features.Movies;
@@ -13,7 +14,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Movie API",
+        Version = "v1",
+        Description = "API for managing movies"
+    });
+});
 builder.Services.AddMarten(options =>
 {
     options.Connection(builder.Configuration.GetConnectionString("Default")!);
@@ -40,7 +49,11 @@ if (app.Environment.IsDevelopment())
 {
     await TestDataSeeder.Seed(app.Services);
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Movie API V1");
+        c.RoutePrefix = "swagger"; // Serve Swagger at the root
+    });
 }
 
 app.UseHttpsRedirection();
