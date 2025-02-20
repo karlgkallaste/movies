@@ -10,7 +10,7 @@ using Wolverine;
 using Wolverine.FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,6 +26,7 @@ builder.Services.AddMarten(options =>
 
 builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
 builder.Services.AddScoped(typeof(IProjectionRepository<>), typeof(ProjectionRepository<>));
+
 builder.Host.UseWolverine(o =>
 {
     o.UseFluentValidation();

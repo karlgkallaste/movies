@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -7,5 +8,6 @@ var postgresDb = builder.AddPostgres("default")
 
 builder.AddProject<Movies_Api>("Api")
     .WithReference(postgresDb)
-    .WaitFor(postgresDb);
+    .WaitFor(postgresDb)
+    .WithEnvironment("ConnectionStrings__Default", builder.Configuration.GetConnectionString("Default"));
 builder.Build().Run();

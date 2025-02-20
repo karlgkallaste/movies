@@ -2,10 +2,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
-using Marten;
-using Marten.Linq;
 using Microsoft.AspNetCore.Mvc;
-using MockQueryable;
 using Moq;
 using Movies.Api.Features.Movies.Controllers;
 using Movies.Api.Features.Movies.Models;
@@ -91,16 +88,22 @@ public class MovieControllerTests
                 {
                     Id = listItems[0].Id,
                     Title = listItems[0].Title,
+                    Overview = listItems[0].Overview,
+                    Popularity = listItems[0].Popularity,
                 },
                 new MovieListItemModel()
                 {
                     Id = listItems[1].Id,
                     Title = listItems[1].Title,
+                    Overview = listItems[1].Overview,
+                    Popularity = listItems[1].Popularity,
                 },
                 new MovieListItemModel()
                 {
                     Id = listItems[2].Id,
                     Title = listItems[2].Title,
+                    Overview = listItems[2].Overview,
+                    Popularity = listItems[2].Popularity,
                 }
             },
             Page = 1,
