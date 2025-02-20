@@ -18,9 +18,18 @@ public class MovieController(
     IEntityRepository<Movie> movieEntityRepository)
     : ControllerBase
 {
+    /// <summary>
+    /// Retrieves movie details by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the movie.</param>
+    /// <returns>
+    /// Returns the details of the movie if found; otherwise, returns a 404 Not Found response.
+    /// </returns>
+    /// <response code="200">Returns the movie details.</response>
+    /// <response code="404">If the movie is not found.</response>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(MovieDetailsModel), 200)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(NotFoundResult), 404)]
     public async Task<IActionResult> Get(
         [FromServices] IProjectionRepository<MovieDetails> movieDetailsEntityRepository,
         [FromRoute] Guid id)
@@ -35,6 +44,15 @@ public class MovieController(
         return Ok(new MovieDetailsModel(details));
     }
 
+    /// <summary>
+    /// Retrieves a paginated list of movies.
+    /// </summary>
+    /// <param name="page">The page number (default is 1).</param>
+    /// <param name="pageSize">The number of items per page (default is 10).</param>
+    /// <returns>
+    /// Returns a paginated list of movies.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of movies.</response>
     [HttpGet("list")]
     [ProducesResponseType(typeof(MovieListModel), 200)]
     public async Task<IActionResult> List([FromServices] IProjectionRepository<MovieListItem> movieListEntityRepository,
@@ -43,7 +61,6 @@ public class MovieController(
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
 
-        // Retrieve paged results
         var movies = await movieListEntityRepository.GetPagedResults(page, pageSize);
 
         var result = new MovieListModel
@@ -51,7 +68,10 @@ public class MovieController(
             Items = movies.Select(m => new MovieListItemModel()
             {
                 Id = m.Id,
-                Title = m.Title
+                Title = m.Title,
+                Overview = m.Overview,
+                Popularity = m.Popularity,
+                ReleaseDate = m.ReleaseDate
             }).ToList(),
             Page = page,
             PageSize = pageSize,
@@ -61,8 +81,18 @@ public class MovieController(
         return Ok(result);
     }
 
+    /// <summary>
+    /// Creates a new movie.
+    /// </summary>
+    /// <param name="request">The request model containing movie details.</param>
+    /// <returns>
+    /// Returns an HTTP 200 response if the operation is successful, 
+    /// or an HTTP 400 response if the request is invalid.
+    /// </returns>
+    /// <response code="200">Movie created or updated successfully.</response>
+    /// <response code="400">Invalid request data.</response>
     [HttpPost("create")]
-    [ProducesResponseType(typeof(OkResult), 200)]
+    [ProducesResponseType(typeof(void), 200)]
     [ProducesResponseType(typeof(Result), 400)]
     public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator,
         [FromBody] CreateMovieRequest request)
@@ -85,8 +115,18 @@ public class MovieController(
         return Ok();
     }
 
+    /// <summary>
+    /// Edits an existing movie's details.
+    /// </summary>
+    /// <param name="request">The request model containing the updated movie details.</param>
+    /// <returns>
+    /// Returns an HTTP 200 response if the movie was successfully updated, 
+    /// or an HTTP 400 response if the request is invalid.
+    /// </returns>
+    /// <response code="200">Movie updated successfully.</response>
+    /// <response code="400">Invalid request data.</response>
     [HttpPost("edit")]
-    [ProducesResponseType(typeof(OkResult), 200)]
+    [ProducesResponseType(typeof(void), 200)]
     [ProducesResponseType(typeof(Result), 400)]
     public async Task<IActionResult> Edit(
         [FromServices] IValidator<EditMovieRequest> validator,
@@ -117,6 +157,18 @@ public class MovieController(
         return Ok();
     }
 
+    /// <summary>
+    /// Rates a movie by adding a user rating.
+    /// </summary>
+    /// <param name="request">The request model containing the movie ID and rating value.</param>
+    /// <returns>
+    /// Returns an HTTP 200 response if the rating was successfully added, 
+    /// an HTTP 400 response if the request is invalid, or 
+    /// an HTTP 404 response if the movie is not found.
+    /// </returns>
+    /// <response code="200">Rating added successfully.</response>
+    /// <response code="400">Invalid request data.</response>
+    /// <response code="404">Movie not found.</response>
     [HttpPost("rate")]
     [ProducesResponseType(typeof(void), 200)]
     [ProducesResponseType(typeof(Result), 400)]

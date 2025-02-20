@@ -14,4 +14,7 @@ public class MovieListItemModel
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
+    public string Overview { get; set; }
+    public DateTimeOffset? ReleaseDate { get; set; }
+    public int Popularity { get; set; }
 }
