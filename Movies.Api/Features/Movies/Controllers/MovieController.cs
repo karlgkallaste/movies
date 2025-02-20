@@ -15,38 +15,36 @@ namespace Movies.Api.Features.Movies.Controllers;
 [Route("api/[controller]")]
 public class MovieController(
     IMessageBus messageBus,
-    IRepository<Movie> movieRepository)
+    IEntityRepository<Movie> movieEntityRepository)
     : ControllerBase
 {
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(List<MovieDetails>), 200)]
+    [ProducesResponseType(typeof(MovieDetailsModel), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Get([FromServices] IRepository<MovieDetails> movieDetailsRepository, [FromRoute]Guid id)
+    public async Task<IActionResult> Get(
+        [FromServices] IProjectionRepository<MovieDetails> movieDetailsEntityRepository,
+        [FromRoute] Guid id)
     {
-        var movie = await movieRepository.GetById(id);
+        var movie = await movieEntityRepository.GetById(id);
         if (movie is null)
         {
             return NotFound();
         }
-        
-        var details = await movieDetailsRepository.GetById(movie.Id);
-        return Ok(details);
+
+        var details = await movieDetailsEntityRepository.GetById(movie.Id);
+        return Ok(new MovieDetailsModel(details));
     }
 
     [HttpGet("list")]
     [ProducesResponseType(typeof(MovieListModel), 200)]
-    public async Task<IActionResult> List([FromServices] IRepository<MovieListItem> movieListRepository, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> List([FromServices] IProjectionRepository<MovieListItem> movieListEntityRepository,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
 
-        var query = await movieListRepository.All();
-
-        int totalCount = query.Count;
-
-        var movies = query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize);
+        // Retrieve paged results
+        var movies = await movieListEntityRepository.GetPagedResults(page, pageSize);
 
         var result = new MovieListModel
         {
@@ -57,7 +55,7 @@ public class MovieController(
             }).ToList(),
             Page = page,
             PageSize = pageSize,
-            TotalCount = totalCount
+            TotalCount = movies.Count
         };
 
         return Ok(result);
@@ -66,21 +64,56 @@ public class MovieController(
     [HttpPost("create")]
     [ProducesResponseType(typeof(OkResult), 200)]
     [ProducesResponseType(typeof(Result), 400)]
-    public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator, [FromBody] CreateMovieRequest request)
+    public async Task<IActionResult> Create([FromServices] IValidator<CreateMovieRequest> validator,
+        [FromBody] CreateMovieRequest request)
     {
         var validationResult = (await validator.ValidateAsync(request)).ToResult();
 
         if (!validationResult.IsSuccess)
         {
-            return BadRequest(validationResult); 
+            return BadRequest(validationResult);
         }
-        
-        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview, request.ReleaseDate, request.Status, request.Genre));
+
+        var commandResult = await messageBus.InvokeAsync<Result>(new CreateMovieCommand(request.Title, request.Overview,
+            request.ReleaseDate, request.Status, request.Genre));
 
         if (!commandResult.IsSuccess)
         {
-            return BadRequest(Result.Failure(nameof(Movie),"Failed to create the movie."));
+            return BadRequest(Result.Failure(nameof(Movie), "Failed to create the movie."));
         }
+
+        return Ok();
+    }
+
+    [HttpPost("edit")]
+    [ProducesResponseType(typeof(OkResult), 200)]
+    [ProducesResponseType(typeof(Result), 400)]
+    public async Task<IActionResult> Edit(
+        [FromServices] IValidator<EditMovieRequest> validator,
+        [FromBody] EditMovieRequest request)
+    {
+        var validationResult = (await validator.ValidateAsync(request)).ToResult();
+
+        if (!validationResult.IsSuccess)
+        {
+            return BadRequest(validationResult);
+        }
+
+        var movie = await movieEntityRepository.GetById(request.Id);
+
+        if (movie is null)
+        {
+            return NotFound();
+        }
+
+        var commandResult = await messageBus.InvokeAsync<Result>(
+            new EditMovieCommand(movie.Id, request.Overview, request.Budget, request.HomePage));
+
+        if (!commandResult.IsSuccess)
+        {
+            return BadRequest(Result.Failure(nameof(Movie), "Failed to edit movie."));
+        }
+
         return Ok();
     }
 
@@ -88,28 +121,30 @@ public class MovieController(
     [ProducesResponseType(typeof(void), 200)]
     [ProducesResponseType(typeof(Result), 400)]
     [ProducesResponseType(typeof(NotFoundResult), 404)]
-    public async Task<IActionResult> Rate([FromServices] IValidator<RateMovieRequest> validator, [FromBody] RateMovieRequest request)
+    public async Task<IActionResult> Rate([FromServices] IValidator<RateMovieRequest> validator,
+        [FromBody] RateMovieRequest request)
     {
         var validationResult = (await validator.ValidateAsync(request)).ToResult();
 
         if (!validationResult.IsSuccess)
         {
-            return BadRequest(validationResult); 
+            return BadRequest(validationResult);
         }
 
-        var movie = await movieRepository.GetById(request.Id);
+        var movie = await movieEntityRepository.GetById(request.Id);
 
         if (movie is null)
         {
             return NotFound();
         }
-        
+
         var commandResult = await messageBus.InvokeAsync<Result>(new RateMovieCommand(request.Id, request.Rating));
 
         if (!commandResult.IsSuccess)
         {
-            return BadRequest(Result.Failure(nameof(Movie),"Failed to rate the movie."));
+            return BadRequest(Result.Failure(nameof(Movie), "Failed to rate the movie."));
         }
+
         return Ok();
     }
 }

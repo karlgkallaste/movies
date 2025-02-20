@@ -14,7 +14,7 @@ namespace Movies.Domain.Tests.Features.Movies.Commands;
 [TestFixture]
 public class RateMovieCommandTests
 {
-    private Mock<IRepository<Movie>> _movieRepositoryMock;
+    private Mock<IEntityRepository<Movie>> _movieRepositoryMock;
     private Mock<IDocumentSession> _documentSessionMock;
     private Mock<IEventStore> _eventStoreMock;
     private Mock<ILogger<RateMovieCommand>> _loggerMock;
@@ -23,7 +23,7 @@ public class RateMovieCommandTests
     [SetUp]
     public void Setup()
     {
-        _movieRepositoryMock = new Mock<IRepository<Movie>>();
+        _movieRepositoryMock = new Mock<IEntityRepository<Movie>>();
         _documentSessionMock = new Mock<IDocumentSession>();
         _eventStoreMock = new Mock<IEventStore>();
         _loggerMock = new Mock<ILogger<RateMovieCommand>>();

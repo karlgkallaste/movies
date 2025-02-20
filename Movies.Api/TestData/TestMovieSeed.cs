@@ -28,8 +28,8 @@ public static class TestMovieSeed
         foreach (var movie in movies)
         {
             documentSession.Events.StartStream<Movie>(movie.Id, movie);
+            await documentSession.SaveChangesAsync();
         }
 
-        await documentSession.SaveChangesAsync();
     }
 }
