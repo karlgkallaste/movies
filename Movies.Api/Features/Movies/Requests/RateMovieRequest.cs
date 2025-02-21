@@ -7,9 +7,6 @@ public class RateMovieRequest
 {
     public Guid Id { get; set; }
     public int Rating { get; set; }
-    public DateTimeOffset? ReleaseDate { get; set; }
-    public MovieStatus Status { get; set; }
-    public MovieGenre Genre { get; set; }
     
     public class Validator : AbstractValidator<RateMovieRequest>
     {
